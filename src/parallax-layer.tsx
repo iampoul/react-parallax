@@ -42,12 +42,22 @@ export interface ParallaxLayerProps {
    * `blur`px toward the scroll edges (out of focus). `0` disables blur. Default `0`.
    *
    * @example
-   * // Background layer, always slightly soft
+   * // Background layer, sharpens as it enters view
    * <ParallaxLayer speed={0.5} blur={4} />
-   * // Foreground layer, sharpens as it enters view
-   * <ParallaxLayer speed={-0.3} blur={6} />
    */
   blur?: number
+  /**
+   * A constant blur in pixels always applied to this layer, regardless of scroll position.
+   * Use this for layers that should always appear out of focus — e.g. a soft background behind
+   * a sharp focal element. Composes with `blur`: total blur = `blurBase + abs(scrollEdge) * blur`.
+   *
+   * @example
+   * // Always blurred background layer
+   * <ParallaxLayer speed={0.5} blurBase={6} />
+   * // Always blurred, gets even softer at edges
+   * <ParallaxLayer speed={0.5} blurBase={3} blur={3} />
+   */
+  blurBase?: number
   /** Stacking order within the container. Default `0`. */
   zIndex?: number
   /** Render as a specific tag/element. Default `"div"`. */
@@ -73,6 +83,7 @@ export const ParallaxLayer = forwardRef<HTMLElement, ParallaxLayerProps>(
       scale = 0,
       fade = 1,
       blur = 0,
+      blurBase = 0,
       zIndex = 0,
       as,
       className,
@@ -130,18 +141,18 @@ export const ParallaxLayer = forwardRef<HTMLElement, ParallaxLayerProps>(
           el.style.opacity = opacity.toFixed(3)
         }
 
-        if (blur > 0) {
-          const blurPx = Math.abs(p) * blur
+        if (blur > 0 || blurBase > 0) {
+          const blurPx = blurBase + Math.abs(p) * blur
           el.style.filter = `blur(${blurPx.toFixed(2)}px)`
         }
       },
-      [speed, pointerStrength, scrollRange, axis, rotate, scale, fade, blur, intensity, disabled],
+      [speed, pointerStrength, scrollRange, axis, rotate, scale, fade, blur, blurBase, intensity, disabled],
     )
 
     useEffect(() => subscribe(apply), [subscribe, apply])
 
     const layerStyle: CSSProperties = {
-      willChange: blur > 0 ? "transform, filter" : "transform",
+      willChange: (blur > 0 || blurBase > 0) ? "transform, filter" : "transform",
       zIndex,
       ...style,
     }
