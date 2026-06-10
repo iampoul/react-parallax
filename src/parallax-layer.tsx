@@ -36,6 +36,18 @@ export interface ParallaxLayerProps {
   scale?: number
   /** Opacity at the start of travel, easing to `1` at center. `1` disables fade. Default `1`. */
   fade?: number
+  /**
+   * Maximum blur in pixels applied to this layer, creating a depth-of-field camera focus effect.
+   * Blur is `0px` when the container is centered in the viewport (in focus) and increases to
+   * `blur`px toward the scroll edges (out of focus). `0` disables blur. Default `0`.
+   *
+   * @example
+   * // Background layer, always slightly soft
+   * <ParallaxLayer speed={0.5} blur={4} />
+   * // Foreground layer, sharpens as it enters view
+   * <ParallaxLayer speed={-0.3} blur={6} />
+   */
+  blur?: number
   /** Stacking order within the container. Default `0`. */
   zIndex?: number
   /** Render as a specific tag/element. Default `"div"`. */
@@ -47,7 +59,7 @@ export interface ParallaxLayerProps {
 /**
  * `<ParallaxLayer>` is a single moving object inside a `<Parallax>` container.
  * Use as many as you like, each with its own `speed`, `pointerStrength`,
- * `rotate`, `scale`, and `fade` to compose layered depth.
+ * `rotate`, `scale`, `fade`, and `blur` to compose layered depth.
  */
 export const ParallaxLayer = forwardRef<HTMLElement, ParallaxLayerProps>(
   function ParallaxLayer(
@@ -60,6 +72,7 @@ export const ParallaxLayer = forwardRef<HTMLElement, ParallaxLayerProps>(
       rotate = 0,
       scale = 0,
       fade = 1,
+      blur = 0,
       zIndex = 0,
       as,
       className,
@@ -88,6 +101,7 @@ export const ParallaxLayer = forwardRef<HTMLElement, ParallaxLayerProps>(
         if (disabled) {
           el.style.transform = "translate3d(0,0,0)"
           el.style.opacity = "1"
+          el.style.filter = ""
           return
         }
 
@@ -115,14 +129,19 @@ export const ParallaxLayer = forwardRef<HTMLElement, ParallaxLayerProps>(
           const opacity = fade + (1 - fade) * (1 - Math.min(1, Math.abs(p)))
           el.style.opacity = opacity.toFixed(3)
         }
+
+        if (blur > 0) {
+          const blurPx = Math.abs(p) * blur
+          el.style.filter = `blur(${blurPx.toFixed(2)}px)`
+        }
       },
-      [speed, pointerStrength, scrollRange, axis, rotate, scale, fade, intensity, disabled],
+      [speed, pointerStrength, scrollRange, axis, rotate, scale, fade, blur, intensity, disabled],
     )
 
     useEffect(() => subscribe(apply), [subscribe, apply])
 
     const layerStyle: CSSProperties = {
-      willChange: "transform",
+      willChange: blur > 0 ? "transform, filter" : "transform",
       zIndex,
       ...style,
     }

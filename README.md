@@ -59,6 +59,7 @@ A single moving object inside a `<Parallax>` container.
 | `rotate` | `number` | `0` | Degrees of rotation across scroll range |
 | `scale` | `number` | `0` | Extra scale at scroll edges (0.2 = +20%) |
 | `fade` | `number` | `1` | Opacity at edges (1 = no fade) |
+| `blur` | `number` | `0` | Max blur in px at scroll edges, `0` at center — creates a depth-of-field focus effect |
 | `zIndex` | `number` | `0` | Stacking order |
 | `as` | `ElementType` | `"div"` | HTML element to render |
 | `className` | `string` | – | CSS class |
