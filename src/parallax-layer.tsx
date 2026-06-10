@@ -1,0 +1,141 @@
+"use client"
+
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useRef,
+  type CSSProperties,
+  type ElementType,
+  type ReactNode,
+} from "react"
+import { useParallax, type ParallaxState } from "./parallax-context"
+
+export interface ParallaxLayerProps {
+  children?: ReactNode
+  /**
+   * Depth of the layer. The core "vital" parallax prop.
+   * - `0`  = locked to the page (no scroll movement).
+   * - `>0` = moves slower than scroll, appears further away (background).
+   * - `<0` = moves faster than scroll, appears closer (foreground).
+   * Typical range: `-1` to `1`. Default `0.3`.
+   */
+  speed?: number
+  /**
+   * How strongly this layer reacts to pointer movement, in pixels of travel.
+   * `0` disables pointer response for this layer. Default `0`.
+   */
+  pointerStrength?: number
+  /** Max pixels this layer travels from scroll. Higher = more dramatic. Default `120`. */
+  scrollRange?: number
+  /** Axis (or axes) the scroll parallax moves along. Default `"y"`. */
+  axis?: "x" | "y" | "both"
+  /** Degrees of rotation applied across the scroll range. Default `0`. */
+  rotate?: number
+  /** Extra scale added at the end of the scroll range (e.g. `0.2` = +20%). Default `0`. */
+  scale?: number
+  /** Opacity at the start of travel, easing to `1` at center. `1` disables fade. Default `1`. */
+  fade?: number
+  /** Stacking order within the container. Default `0`. */
+  zIndex?: number
+  /** Render as a specific tag/element. Default `"div"`. */
+  as?: ElementType
+  className?: string
+  style?: CSSProperties
+}
+
+/**
+ * `<ParallaxLayer>` is a single moving object inside a `<Parallax>` container.
+ * Use as many as you like, each with its own `speed`, `pointerStrength`,
+ * `rotate`, `scale`, and `fade` to compose layered depth.
+ */
+export const ParallaxLayer = forwardRef<HTMLElement, ParallaxLayerProps>(
+  function ParallaxLayer(
+    {
+      children,
+      speed = 0.3,
+      pointerStrength = 0,
+      scrollRange = 120,
+      axis = "y",
+      rotate = 0,
+      scale = 0,
+      fade = 1,
+      zIndex = 0,
+      as,
+      className,
+      style,
+    },
+    forwardedRef,
+  ) {
+    const Tag = (as ?? "div") as ElementType
+    const { subscribe, intensity, disabled } = useParallax()
+    const elRef = useRef<HTMLElement | null>(null)
+
+    const setRefs = useCallback(
+      (node: HTMLElement | null) => {
+        elRef.current = node
+        if (typeof forwardedRef === "function") forwardedRef(node)
+        else if (forwardedRef) forwardedRef.current = node
+      },
+      [forwardedRef],
+    )
+
+    const apply = useCallback(
+      (s: ParallaxState) => {
+        const el = elRef.current
+        if (!el) return
+
+        if (disabled) {
+          el.style.transform = "translate3d(0,0,0)"
+          el.style.opacity = "1"
+          return
+        }
+
+        // Center the scroll progress around 0: -0.5 (top) .. 0.5 (bottom).
+        const p = (s.scrollProgress - 0.5) * 2 // -1 .. 1
+        const travel = p * scrollRange * speed * intensity
+
+        const scrollX = axis === "x" || axis === "both" ? travel : 0
+        const scrollY = axis === "y" || axis === "both" ? travel : 0
+
+        const ptrX = s.pointerX * pointerStrength * intensity
+        const ptrY = s.pointerY * pointerStrength * intensity
+
+        const tx = scrollX + ptrX
+        const ty = scrollY + ptrY
+
+        const rot = rotate ? p * rotate : 0
+        const scl = scale ? 1 + Math.abs(p) * scale : 1
+
+        el.style.transform = `translate3d(${tx.toFixed(2)}px, ${ty.toFixed(
+          2,
+        )}px, 0) rotate(${rot.toFixed(2)}deg) scale(${scl.toFixed(3)})`
+
+        if (fade < 1) {
+          const opacity = fade + (1 - fade) * (1 - Math.min(1, Math.abs(p)))
+          el.style.opacity = opacity.toFixed(3)
+        }
+      },
+      [speed, pointerStrength, scrollRange, axis, rotate, scale, fade, intensity, disabled],
+    )
+
+    useEffect(() => subscribe(apply), [subscribe, apply])
+
+    const layerStyle: CSSProperties = {
+      willChange: "transform",
+      zIndex,
+      ...style,
+    }
+
+    return (
+      <Tag
+        ref={setRefs}
+        data-parallax-layer=""
+        className={className}
+        style={layerStyle}
+      >
+        {children}
+      </Tag>
+    )
+  },
+)
