@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-06-11
+
+### Added
+
+- `onProgress` callback prop on `<Parallax>` — fires every animation frame with the current `ParallaxState`, enabling external UI to be driven without the `useParallax()` hook (closes #7)
+- `springConfig` prop on `<Parallax>` — adds spring physics as an alternative to lerp `smoothing`, with `stiffness` and `damping` controls for natural overshoot and bounce (closes #8)
+- `scrollRange` now accepts percentage strings (e.g. `"25%"`) derived from the container's height, keeping motion proportional across screen sizes (closes #11)
+- Interactive Vite demo app in `demo/` showcasing all features: scroll, pointer, depth-of-field, spring physics, `onProgress`, and composable effects (closes #10)
+- Unit and integration test suite using Vitest + @testing-library/react with 16 tests covering all major behaviours (closes #9)
+- `test`, `test:watch`, and `test:coverage` scripts
+
 ## [0.4.0] - 2026-06-11
 
 ### Fixed

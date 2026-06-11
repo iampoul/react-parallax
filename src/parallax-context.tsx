@@ -33,6 +33,8 @@ export interface ParallaxContextValue {
   subscribe: (cb: Subscriber) => () => void
   /** Read the most recent motion state synchronously (used for first paint). */
   getState: () => ParallaxState
+  /** The <Parallax> container DOM element — used by layers to resolve relative values. */
+  containerEl: HTMLElement | null
 }
 
 export const ParallaxContext = createContext<ParallaxContextValue | null>(null)

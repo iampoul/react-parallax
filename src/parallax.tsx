@@ -35,8 +35,22 @@ export interface ParallaxProps {
   /**
    * How smoothly layers ease toward their target position, from 0 to 1.
    * Lower = floatier/laggier, higher = snappier. `1` disables smoothing. Default `0.12`.
+   * Ignored when `springConfig` is set.
    */
   smoothing?: number
+  /**
+   * Spring physics config as an alternative to the lerp `smoothing`.
+   * When provided, `smoothing` is ignored and motion is governed by spring dynamics
+   * — giving a more natural, physical feel especially for pointer-driven effects.
+   *
+   * - `stiffness`: how strongly the spring pulls toward the target (default `120`)
+   * - `damping`: resistance that prevents oscillation (default `14`)
+   *
+   * @example
+   * <Parallax springConfig={{ stiffness: 80, damping: 10 }} />  // loose, bouncy
+   * <Parallax springConfig={{ stiffness: 200, damping: 20 }} /> // tight, snappy
+   */
+  springConfig?: { stiffness?: number; damping?: number }
   /** Pause all motion. Also auto-enabled for `prefers-reduced-motion` users. Default `false`. */
   disabled?: boolean
   /**
@@ -49,6 +63,15 @@ export interface ParallaxProps {
    * if layers should bleed outside the container bounds.
    */
   overflow?: CSSProperties["overflow"]
+  /**
+   * Callback fired on every animation frame with the current smoothed motion state.
+   * Use this to drive external animations or read scroll/pointer progress without
+   * needing the `useParallax()` hook.
+   *
+   * @example
+   * <Parallax onProgress={({ scrollProgress }) => setOpacity(scrollProgress)} />
+   */
+  onProgress?: (state: ParallaxState) => void
   /** The HTML element/tag to render as the container. Default `"div"`. */
   as?: ElementType
   className?: string
@@ -71,6 +94,8 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
     disabled = false,
     scrollParent,
     overflow = "hidden",
+    onProgress,
+    springConfig,
     as,
     className,
     style,
@@ -85,6 +110,19 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
   const state = useRef<ParallaxState>({ scrollProgress: 0.5, pointerX: 0, pointerY: 0 })
   // The raw target values updated by scroll/pointer events.
   const target = useRef<ParallaxState>({ scrollProgress: 0.5, pointerX: 0, pointerY: 0 })
+
+  // Keep onProgress in a ref so the rAF tick always calls the latest version
+  // without needing to restart the loop when the prop changes.
+  const onProgressRef = useRef(onProgress)
+  useEffect(() => { onProgressRef.current = onProgress }, [onProgress])
+
+  // Keep springConfig in a ref for the same reason — inline object literals would
+  // otherwise restart the rAF loop on every parent render.
+  const springConfigRef = useRef(springConfig)
+  useEffect(() => { springConfigRef.current = springConfig }, [springConfig])
+
+  // Velocity state for spring physics — one value per axis.
+  const velocity = useRef({ scrollProgress: 0, pointerX: 0, pointerY: 0 })
 
   // useState (not useRef) so OS-level motion preference changes re-trigger context updates.
   // Initialised in useEffect to avoid SSR mismatch.
@@ -127,7 +165,7 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
     target.current.pointerY = Math.min(1, Math.max(-1, py * 2 - 1))
   }, [])
 
-  const isInactive = disabled
+  const isInactive = disabled || prefersReduced
 
   useEffect(() => {
     const useScroll = mode === "scroll" || mode === "both"
@@ -162,17 +200,32 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
 
     let raf = 0
     const tick = () => {
-      const ease = isInactive ? 1 : Math.min(1, Math.max(0.01, smoothing))
       const s = state.current
       const t = isInactive
         ? { scrollProgress: 0.5, pointerX: 0, pointerY: 0 }
         : target.current
 
-      s.scrollProgress += (t.scrollProgress - s.scrollProgress) * ease
-      s.pointerX += (t.pointerX - s.pointerX) * ease
-      s.pointerY += (t.pointerY - s.pointerY) * ease
+      if (springConfigRef.current) {
+        // Spring physics: F = stiffness * displacement - damping * velocity
+        const k = (springConfigRef.current.stiffness ?? 120) / 1000
+        const b = (springConfigRef.current.damping ?? 14) / 1000
+        const v = velocity.current
+        const axes = ["scrollProgress", "pointerX", "pointerY"] as const
+        for (const axis of axes) {
+          const displacement = t[axis] - s[axis]
+          v[axis] += displacement * k - v[axis] * b
+          s[axis] += v[axis]
+        }
+      } else {
+        // Lerp smoothing
+        const ease = isInactive ? 1 : Math.min(1, Math.max(0.01, smoothing))
+        s.scrollProgress += (t.scrollProgress - s.scrollProgress) * ease
+        s.pointerX += (t.pointerX - s.pointerX) * ease
+        s.pointerY += (t.pointerY - s.pointerY) * ease
+      }
 
       subscribers.current.forEach((cb) => cb(s))
+      onProgressRef.current?.(s)
       raf = requestAnimationFrame(tick)
     }
 
@@ -210,6 +263,7 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
       intensity,
       disabled: disabled || prefersReduced,
       mode,
+      containerEl: containerRef.current,
       getState: () => state.current,
       subscribe: (cb) => {
         subscribers.current.add(cb)
