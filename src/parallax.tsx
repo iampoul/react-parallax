@@ -199,6 +199,7 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
     }
 
     let raf = 0
+
     const tick = () => {
       const s = state.current
       const t = isInactive
@@ -229,21 +230,37 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
       raf = requestAnimationFrame(tick)
     }
 
-    // Pause the rAF loop when the tab is hidden to avoid wasted CPU.
-    const handleVisibility = () => {
-      if (document.hidden) {
-        cancelAnimationFrame(raf)
-      } else {
+    const startLoop = () => {
+      if (raf === 0) {
         measureScroll()
         raf = requestAnimationFrame(tick)
       }
     }
 
+    const stopLoop = () => {
+      cancelAnimationFrame(raf)
+      raf = 0
+    }
+
+    // Pause when tab is hidden; resume when visible again.
+    const handleVisibility = () => {
+      document.hidden ? stopLoop() : startLoop()
+    }
+
+    // Pause when the container scrolls fully out of the viewport; resume when it re-enters.
+    // threshold:0 fires as soon as any pixel enters or leaves.
+    const io = new IntersectionObserver(
+      ([entry]) => { entry.isIntersecting ? startLoop() : stopLoop() },
+      { threshold: 0 },
+    )
+    if (el) io.observe(el)
+
     document.addEventListener("visibilitychange", handleVisibility)
-    raf = requestAnimationFrame(tick)
+    startLoop()
 
     return () => {
-      cancelAnimationFrame(raf)
+      stopLoop()
+      io.disconnect()
       document.removeEventListener("visibilitychange", handleVisibility)
       if (useScroll) {
         scrollEl.removeEventListener("scroll", handleScroll)
