@@ -26,8 +26,13 @@ export interface ParallaxLayerProps {
    * `0` disables pointer response for this layer. Default `0`.
    */
   pointerStrength?: number
-  /** Max pixels this layer travels from scroll. Higher = more dramatic. Default `120`. */
-  scrollRange?: number
+  /**
+   * Max travel distance for scroll-driven movement.
+   * - Pass a `number` for absolute pixels (e.g. `120`). Default `120`.
+   * - Pass a `string` percentage (e.g. `"25%"`) to derive the range from the
+   *   container's current height — keeps motion proportional across screen sizes.
+   */
+  scrollRange?: number | string
   /** Axis (or axes) the scroll parallax moves along. Default `"y"`. */
   axis?: "x" | "y" | "both"
   /** Degrees of rotation applied across the scroll range. Default `0`. */
@@ -118,7 +123,14 @@ export const ParallaxLayer = forwardRef<HTMLElement, ParallaxLayerProps>(
 
         // Center the scroll progress around 0: -0.5 (top) .. 0.5 (bottom).
         const p = (s.scrollProgress - 0.5) * 2 // -1 .. 1
-        const travel = p * scrollRange * speed * intensity
+
+        // Resolve scrollRange: absolute px or percentage of container height.
+        const resolvedRange =
+          typeof scrollRange === "string" && scrollRange.endsWith("%")
+            ? (parseFloat(scrollRange) / 100) * (el.offsetHeight || 0)
+            : (scrollRange as number)
+
+        const travel = p * resolvedRange * speed * intensity
 
         const scrollX = axis === "x" || axis === "both" ? travel : 0
         const scrollY = axis === "y" || axis === "both" ? travel : 0
