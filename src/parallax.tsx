@@ -263,7 +263,7 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
       intensity,
       disabled: disabled || prefersReduced,
       mode,
-      containerEl: containerRef.current,
+      containerRef,
       getState: () => state.current,
       subscribe: (cb) => {
         subscribers.current.add(cb)
