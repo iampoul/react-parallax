@@ -97,7 +97,7 @@ export const ParallaxLayer = forwardRef<HTMLElement, ParallaxLayerProps>(
     forwardedRef,
   ) {
     const Tag = (as ?? "div") as ElementType
-    const { subscribe, intensity, disabled } = useParallax()
+    const { subscribe, intensity, disabled, containerEl } = useParallax()
     const elRef = useRef<HTMLElement | null>(null)
 
     const setRefs = useCallback(
@@ -124,10 +124,10 @@ export const ParallaxLayer = forwardRef<HTMLElement, ParallaxLayerProps>(
         // Center the scroll progress around 0: -0.5 (top) .. 0.5 (bottom).
         const p = (s.scrollProgress - 0.5) * 2 // -1 .. 1
 
-        // Resolve scrollRange: absolute px or percentage of container height.
+        // Resolve scrollRange: absolute px or percentage of the <Parallax> container height.
         const resolvedRange =
           typeof scrollRange === "string" && scrollRange.endsWith("%")
-            ? (parseFloat(scrollRange) / 100) * (el.offsetHeight || 0)
+            ? (parseFloat(scrollRange) / 100) * (containerEl?.offsetHeight ?? 0)
             : (scrollRange as number)
 
         const travel = p * resolvedRange * speed * intensity
@@ -158,7 +158,7 @@ export const ParallaxLayer = forwardRef<HTMLElement, ParallaxLayerProps>(
           el.style.filter = `blur(${blurPx.toFixed(2)}px)`
         }
       },
-      [speed, pointerStrength, scrollRange, axis, rotate, scale, fade, blur, blurBase, intensity, disabled],
+      [speed, pointerStrength, scrollRange, axis, rotate, scale, fade, blur, blurBase, intensity, disabled, containerEl],
     )
 
     useEffect(() => subscribe(apply), [subscribe, apply])

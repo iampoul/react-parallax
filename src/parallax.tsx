@@ -116,6 +116,11 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
   const onProgressRef = useRef(onProgress)
   useEffect(() => { onProgressRef.current = onProgress }, [onProgress])
 
+  // Keep springConfig in a ref for the same reason — inline object literals would
+  // otherwise restart the rAF loop on every parent render.
+  const springConfigRef = useRef(springConfig)
+  useEffect(() => { springConfigRef.current = springConfig }, [springConfig])
+
   // Velocity state for spring physics — one value per axis.
   const velocity = useRef({ scrollProgress: 0, pointerX: 0, pointerY: 0 })
 
@@ -160,7 +165,7 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
     target.current.pointerY = Math.min(1, Math.max(-1, py * 2 - 1))
   }, [])
 
-  const isInactive = disabled
+  const isInactive = disabled || prefersReduced
 
   useEffect(() => {
     const useScroll = mode === "scroll" || mode === "both"
@@ -200,10 +205,10 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
         ? { scrollProgress: 0.5, pointerX: 0, pointerY: 0 }
         : target.current
 
-      if (springConfig) {
+      if (springConfigRef.current) {
         // Spring physics: F = stiffness * displacement - damping * velocity
-        const k = (springConfig.stiffness ?? 120) / 1000
-        const b = (springConfig.damping ?? 14) / 1000
+        const k = (springConfigRef.current.stiffness ?? 120) / 1000
+        const b = (springConfigRef.current.damping ?? 14) / 1000
         const v = velocity.current
         const axes = ["scrollProgress", "pointerX", "pointerY"] as const
         for (const axis of axes) {
@@ -251,13 +256,14 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
         el.removeEventListener("touchend", handlePointerLeave)
       }
     }
-  }, [mode, smoothing, isInactive, measureScroll, onPointer, scrollParent, springConfig])
+  }, [mode, smoothing, isInactive, measureScroll, onPointer, scrollParent])
 
   const ctxValue = useMemo<ParallaxContextValue>(
     () => ({
       intensity,
       disabled: disabled || prefersReduced,
       mode,
+      containerEl: containerRef.current,
       getState: () => state.current,
       subscribe: (cb) => {
         subscribers.current.add(cb)
