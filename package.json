@@ -2,7 +2,13 @@
   "name": "@iampoul/react-parallax",
   "version": "0.4.0",
   "description": "A performant, accessible React parallax component with scroll and pointer-based motion",
-  "keywords": ["react", "parallax", "scroll", "animation", "motion"],
+  "keywords": [
+    "react",
+    "parallax",
+    "scroll",
+    "animation",
+    "motion"
+  ],
   "license": "MIT",
   "author": "Poul",
   "type": "module",
@@ -21,11 +27,17 @@
       }
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
@@ -33,12 +45,17 @@
     "react-dom": ">=18.0.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@vitest/coverage-v8": "^4.1.8",
+    "jsdom": "^29.1.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tsup": "^8.3.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.8"
   },
   "sideEffects": false
 }

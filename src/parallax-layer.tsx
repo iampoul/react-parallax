@@ -69,6 +69,8 @@ export interface ParallaxLayerProps {
   as?: ElementType
   className?: string
   style?: CSSProperties
+  /** Any additional HTML attributes are forwarded to the layer element. */
+  [key: string]: unknown
 }
 
 /**
@@ -93,6 +95,7 @@ export const ParallaxLayer = forwardRef<HTMLElement, ParallaxLayerProps>(
       as,
       className,
       style,
+      ...rest
     },
     forwardedRef,
   ) {
@@ -175,6 +178,7 @@ export const ParallaxLayer = forwardRef<HTMLElement, ParallaxLayerProps>(
         data-parallax-layer=""
         className={className}
         style={layerStyle}
+        {...rest}
       >
         {children}
       </Tag>
