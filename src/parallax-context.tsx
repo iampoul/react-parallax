@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext } from "react"
+import React, { createContext, useContext } from "react"
 
 /**
  * The live motion state shared from the <Parallax> container to every
@@ -33,8 +33,8 @@ export interface ParallaxContextValue {
   subscribe: (cb: Subscriber) => () => void
   /** Read the most recent motion state synchronously (used for first paint). */
   getState: () => ParallaxState
-  /** The <Parallax> container DOM element — used by layers to resolve relative values. */
-  containerEl: HTMLElement | null
+  /** Ref to the <Parallax> container DOM element — always current, used by layers to resolve relative values. */
+  containerRef: React.RefObject<HTMLElement | null>
 }
 
 export const ParallaxContext = createContext<ParallaxContextValue | null>(null)

@@ -22,7 +22,18 @@ export function flushRaf() {
   cbs.forEach(([, cb]) => cb(performance.now()))
 }
 
-// Mock window.matchMedia
+// Mock IntersectionObserver — jsdom doesn't implement it.
+// Immediately fires the callback with isIntersecting: true so the rAF loop starts.
+class IntersectionObserverMock {
+  constructor(cb: IntersectionObserverCallback) {
+    cb([{ isIntersecting: true } as IntersectionObserverEntry], this)
+  }
+  observe = vi.fn()
+  unobserve = vi.fn()
+  disconnect = vi.fn()
+}
+vi.stubGlobal("IntersectionObserver", IntersectionObserverMock)
+
 Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: vi.fn().mockImplementation((query: string) => ({
