@@ -49,6 +49,15 @@ export interface ParallaxProps {
    * if layers should bleed outside the container bounds.
    */
   overflow?: CSSProperties["overflow"]
+  /**
+   * Callback fired on every animation frame with the current smoothed motion state.
+   * Use this to drive external animations or read scroll/pointer progress without
+   * needing the `useParallax()` hook.
+   *
+   * @example
+   * <Parallax onProgress={({ scrollProgress }) => setOpacity(scrollProgress)} />
+   */
+  onProgress?: (state: ParallaxState) => void
   /** The HTML element/tag to render as the container. Default `"div"`. */
   as?: ElementType
   className?: string
@@ -71,6 +80,7 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
     disabled = false,
     scrollParent,
     overflow = "hidden",
+    onProgress,
     as,
     className,
     style,
@@ -85,6 +95,11 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
   const state = useRef<ParallaxState>({ scrollProgress: 0.5, pointerX: 0, pointerY: 0 })
   // The raw target values updated by scroll/pointer events.
   const target = useRef<ParallaxState>({ scrollProgress: 0.5, pointerX: 0, pointerY: 0 })
+
+  // Keep onProgress in a ref so the rAF tick always calls the latest version
+  // without needing to restart the loop when the prop changes.
+  const onProgressRef = useRef(onProgress)
+  useEffect(() => { onProgressRef.current = onProgress }, [onProgress])
 
   // useState (not useRef) so OS-level motion preference changes re-trigger context updates.
   // Initialised in useEffect to avoid SSR mismatch.
@@ -173,6 +188,7 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
       s.pointerY += (t.pointerY - s.pointerY) * ease
 
       subscribers.current.forEach((cb) => cb(s))
+      onProgressRef.current?.(s)
       raf = requestAnimationFrame(tick)
     }
 
