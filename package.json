@@ -1,6 +1,6 @@
 {
   "name": "@iampoul/react-parallax",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A performant, accessible React parallax component with scroll and pointer-based motion",
   "keywords": ["react", "parallax", "scroll", "animation", "motion"],
   "license": "MIT",

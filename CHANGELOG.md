@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-06-11
+
+_Version bump to republish — 0.2.0 could not be rebuilt after initial publish._
+
+### Added
+
+- `blur` prop on `<ParallaxLayer>` — dynamic depth-of-field effect: `0px` when centered in the viewport, increases to the specified value toward scroll edges
+- `blurBase` prop on `<ParallaxLayer>` — constant blur always applied, for layers that should permanently appear out of focus (e.g. a soft background behind a sharp focal element). Composes with `blur`: total = `blurBase + abs(scrollEdge) * blur`
+- `willChange` automatically includes `filter` when either blur prop is active
+- GitHub Actions workflow to publish to both npm and GitHub Packages on release
+
 ## [0.2.0] - 2026-06-10
 
 ### Added
