@@ -6,6 +6,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   type CSSProperties,
   type ElementType,
   type ReactNode,
@@ -38,6 +39,16 @@ export interface ParallaxProps {
   smoothing?: number
   /** Pause all motion. Also auto-enabled for `prefers-reduced-motion` users. Default `false`. */
   disabled?: boolean
+  /**
+   * Custom scroll container. Defaults to `window`. Pass this when `<Parallax>`
+   * lives inside a scrollable element (modal, sidebar, overflow div, etc.).
+   */
+  scrollParent?: HTMLElement | null
+  /**
+   * CSS overflow applied to the container. Default `"hidden"`. Set to `"visible"`
+   * if layers should bleed outside the container bounds.
+   */
+  overflow?: CSSProperties["overflow"]
   /** The HTML element/tag to render as the container. Default `"div"`. */
   as?: ElementType
   className?: string
@@ -58,6 +69,8 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
     intensity = 1,
     smoothing = 0.12,
     disabled = false,
+    scrollParent,
+    overflow = "hidden",
     as,
     className,
     style,
@@ -73,11 +86,13 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
   // The raw target values updated by scroll/pointer events.
   const target = useRef<ParallaxState>({ scrollProgress: 0.5, pointerX: 0, pointerY: 0 })
 
-  const prefersReduced = useRef(false)
+  // useState (not useRef) so OS-level motion preference changes re-trigger context updates.
+  // Initialised in useEffect to avoid SSR mismatch.
+  const [prefersReduced, setPrefersReduced] = useState(false)
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
-    prefersReduced.current = mq.matches
-    const onChange = () => (prefersReduced.current = mq.matches)
+    setPrefersReduced(mq.matches)
+    const onChange = () => setPrefersReduced(mq.matches)
     mq.addEventListener("change", onChange)
     return () => mq.removeEventListener("change", onChange)
   }, [])
@@ -118,6 +133,8 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
     const useScroll = mode === "scroll" || mode === "both"
     const usePointer = mode === "pointer" || mode === "both"
     const el = containerRef.current
+    // Attach scroll listener to custom parent or window.
+    const scrollEl = scrollParent ?? window
 
     const handleScroll = () => measureScroll()
     const handleResize = () => measureScroll()
@@ -133,7 +150,7 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
     measureScroll()
 
     if (useScroll) {
-      window.addEventListener("scroll", handleScroll, { passive: true })
+      scrollEl.addEventListener("scroll", handleScroll, { passive: true })
       window.addEventListener("resize", handleResize)
     }
     if (usePointer && el) {
@@ -158,12 +175,25 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
       subscribers.current.forEach((cb) => cb(s))
       raf = requestAnimationFrame(tick)
     }
+
+    // Pause the rAF loop when the tab is hidden to avoid wasted CPU.
+    const handleVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(raf)
+      } else {
+        measureScroll()
+        raf = requestAnimationFrame(tick)
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibility)
     raf = requestAnimationFrame(tick)
 
     return () => {
       cancelAnimationFrame(raf)
+      document.removeEventListener("visibilitychange", handleVisibility)
       if (useScroll) {
-        window.removeEventListener("scroll", handleScroll)
+        scrollEl.removeEventListener("scroll", handleScroll)
         window.removeEventListener("resize", handleResize)
       }
       if (usePointer && el) {
@@ -173,12 +203,12 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
         el.removeEventListener("touchend", handlePointerLeave)
       }
     }
-  }, [mode, smoothing, isInactive, measureScroll, onPointer])
+  }, [mode, smoothing, isInactive, measureScroll, onPointer, scrollParent])
 
   const ctxValue = useMemo<ParallaxContextValue>(
     () => ({
       intensity,
-      disabled: disabled || prefersReduced.current,
+      disabled: disabled || prefersReduced,
       mode,
       getState: () => state.current,
       subscribe: (cb) => {
@@ -187,12 +217,12 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
         return () => subscribers.current.delete(cb)
       },
     }),
-    [intensity, disabled, mode],
+    [intensity, disabled, mode, prefersReduced],
   )
 
   const containerStyle: CSSProperties = {
     position: "relative",
-    overflow: "hidden",
+    overflow,
     ...style,
   }
 
