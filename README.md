@@ -42,6 +42,8 @@ The container that tracks scroll + pointer motion and broadcasts it to child lay
 | `intensity` | `number` | `1` | Global movement multiplier (0.5 = subtle, 2 = dramatic) |
 | `smoothing` | `number` | `0.12` | Easing factor (lower = floatier, 1 = instant) |
 | `disabled` | `boolean` | `false` | Pause all motion (auto-enabled for reduced-motion) |
+| `scrollParent` | `HTMLElement \| null` | `window` | Custom scroll container — use when `<Parallax>` is inside a scrollable div, modal, or sidebar |
+| `overflow` | `string` | `"hidden"` | CSS overflow on the container — set to `"visible"` to let layers bleed outside bounds |
 | `as` | `ElementType` | `"div"` | HTML element to render |
 | `className` | `string` | – | CSS class for the container |
 | `style` | `CSSProperties` | – | Inline styles |

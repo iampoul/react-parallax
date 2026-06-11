@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-06-11
+
+### Fixed
+
+- `prefers-reduced-motion` is now reactive — OS-level motion preference changes mid-session correctly disable all parallax motion without a page reload (converted `prefersReduced` from a ref to state)
+- `prefers-reduced-motion` was always `false` on first render due to being read before the effect ran — now correctly initialised in the same effect that attaches the media query listener
+- rAF loop now pauses when the browser tab is hidden (`visibilitychange`) and resumes when the tab becomes visible again, eliminating wasted CPU in background tabs
+
+### Added
+
+- `scrollParent` prop on `<Parallax>` — attach scroll listener to a custom scrollable element instead of `window`; use when the component lives inside a modal, sidebar, or overflow container
+- `overflow` prop on `<Parallax>` — controls CSS overflow on the container (default `"hidden"`); set to `"visible"` to allow layers to bleed outside the container bounds
+
 ## [0.3.0] - 2026-06-11
 
 _Version bump to republish — 0.2.0 could not be rebuilt after initial publish._
