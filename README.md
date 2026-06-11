@@ -40,7 +40,9 @@ The container that tracks scroll + pointer motion and broadcasts it to child lay
 |------|------|---------|-------------|
 | `mode` | `"scroll" \| "pointer" \| "both"` | `"both"` | Which inputs drive the parallax effect |
 | `intensity` | `number` | `1` | Global movement multiplier (0.5 = subtle, 2 = dramatic) |
-| `smoothing` | `number` | `0.12` | Easing factor (lower = floatier, 1 = instant) |
+| `smoothing` | `number` | `0.12` | Easing factor (lower = floatier, 1 = instant). Ignored when `springConfig` is set |
+| `springConfig` | `{ stiffness?: number; damping?: number }` | – | Spring physics alternative to lerp — gives natural overshoot. `stiffness` default `120`, `damping` default `14` |
+| `onProgress` | `(state: ParallaxState) => void` | – | Callback fired every frame with current scroll/pointer state |
 | `disabled` | `boolean` | `false` | Pause all motion (auto-enabled for reduced-motion) |
 | `scrollParent` | `HTMLElement \| null` | `window` | Custom scroll container — use when `<Parallax>` is inside a scrollable div, modal, or sidebar |
 | `overflow` | `string` | `"hidden"` | CSS overflow on the container — set to `"visible"` to let layers bleed outside bounds |
@@ -56,7 +58,7 @@ A single moving object inside a `<Parallax>` container.
 |------|------|---------|-------------|
 | `speed` | `number` | `0.3` | Depth: 0 = locked, >0 = slower/background, <0 = faster/foreground |
 | `pointerStrength` | `number` | `0` | Pixels of travel from pointer movement |
-| `scrollRange` | `number` | `120` | Max pixels of scroll travel |
+| `scrollRange` | `number \| string` | `120` | Max scroll travel — absolute px or `"25%"` of container height |
 | `axis` | `"x" \| "y" \| "both"` | `"y"` | Axis for scroll parallax |
 | `rotate` | `number` | `0` | Degrees of rotation across scroll range |
 | `scale` | `number` | `0` | Extra scale at scroll edges (0.2 = +20%) |
