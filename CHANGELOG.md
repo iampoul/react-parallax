@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-06-11
+
+### Fixed
+
+- `containerEl` in context was a stale snapshot of `containerRef.current` set at memo time — replaced with the ref object itself so `scrollRange="%"` always reads the live container height on every frame, even after resize or late mount
+
+### Performance
+
+- rAF loop now pauses automatically via `IntersectionObserver` when the `<Parallax>` container is fully off-screen, and resumes as soon as any pixel re-enters the viewport. Combined with the existing tab-visibility pause, this means the loop only runs when it can actually be seen.
+
 ## [0.5.0] - 2026-06-11
 
 ### Added
