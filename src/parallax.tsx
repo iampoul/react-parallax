@@ -76,8 +76,6 @@ export interface ParallaxProps {
   as?: ElementType
   className?: string
   style?: CSSProperties
-  /** Any additional HTML attributes are forwarded to the container element. */
-  [key: string]: unknown
 }
 
 /**
@@ -101,7 +99,6 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
     as,
     className,
     style,
-    ...rest
   },
   forwardedRef,
 ) {
@@ -284,7 +281,6 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
         data-parallax-container=""
         className={className}
         style={containerStyle}
-        {...rest}
       >
         {children}
       </Tag>

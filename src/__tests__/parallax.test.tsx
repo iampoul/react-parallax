@@ -10,10 +10,18 @@ import { flushRaf } from "./setup"
 function renderParallax(props = {}, layerProps = {}) {
   return render(
     <Parallax {...props}>
-      <ParallaxLayer data-testid="layer" {...layerProps} />
+      <ParallaxLayer {...layerProps} />
     </Parallax>,
   )
 }
+
+/** Get the first [data-parallax-container] from a rendered result */
+const getContainer = (c: HTMLElement) =>
+  c.querySelector("[data-parallax-container]") as HTMLElement
+
+/** Get the first [data-parallax-layer] from a rendered result */
+const getLayer = (c: HTMLElement) =>
+  c.querySelector("[data-parallax-layer]") as HTMLElement
 
 describe("<Parallax>", () => {
   it("renders its children", () => {
@@ -27,22 +35,22 @@ describe("<Parallax>", () => {
 
   it("renders with data-parallax-container attribute", () => {
     const { container } = render(<Parallax><div /></Parallax>)
-    expect(container.firstChild).toHaveAttribute("data-parallax-container")
+    expect(getContainer(container)).toBeInTheDocument()
   })
 
   it("applies overflow hidden by default", () => {
     const { container } = render(<Parallax><div /></Parallax>)
-    expect(container.firstChild).toHaveStyle({ overflow: "hidden" })
+    expect(getContainer(container)).toHaveStyle({ overflow: "hidden" })
   })
 
   it("applies custom overflow prop", () => {
     const { container } = render(<Parallax overflow="visible"><div /></Parallax>)
-    expect(container.firstChild).toHaveStyle({ overflow: "visible" })
+    expect(getContainer(container)).toHaveStyle({ overflow: "visible" })
   })
 
   it("renders as a custom element when as prop is set", () => {
-    render(<Parallax as="section" data-testid="stage"><div /></Parallax>)
-    expect(screen.getByTestId("stage").tagName).toBe("SECTION")
+    const { container } = render(<Parallax as="section"><div /></Parallax>)
+    expect(getContainer(container)?.tagName).toBe("SECTION")
   })
 
   it("throws if useParallax is used outside <Parallax>", () => {
@@ -50,7 +58,6 @@ describe("<Parallax>", () => {
       useParallax()
       return null
     }
-    // suppress React error boundary noise
     const spy = vi.spyOn(console, "error").mockImplementation(() => {})
     expect(() => render(<Bad />)).toThrow(
       "<ParallaxLayer> must be rendered inside a <Parallax> container.",
@@ -61,45 +68,45 @@ describe("<Parallax>", () => {
 
 describe("<ParallaxLayer>", () => {
   it("renders with data-parallax-layer attribute", () => {
-    const { getByTestId } = renderParallax({}, { "data-testid": "layer" })
-    expect(getByTestId("layer")).toHaveAttribute("data-parallax-layer")
+    const { container } = renderParallax()
+    expect(getLayer(container)).toBeInTheDocument()
   })
 
   it("applies will-change: transform by default", () => {
-    const { getByTestId } = renderParallax({}, { "data-testid": "layer" })
-    expect(getByTestId("layer")).toHaveStyle({ willChange: "transform" })
+    const { container } = renderParallax()
+    expect(getLayer(container)).toHaveStyle({ willChange: "transform" })
   })
 
   it("applies will-change: transform, filter when blur is set", () => {
-    const { getByTestId } = renderParallax({}, { "data-testid": "layer", blur: 4 })
-    expect(getByTestId("layer")).toHaveStyle({ willChange: "transform, filter" })
+    const { container } = renderParallax({}, { blur: 4 })
+    expect(getLayer(container)).toHaveStyle({ willChange: "transform, filter" })
   })
 
   it("applies will-change: transform, filter when blurBase is set", () => {
-    const { getByTestId } = renderParallax({}, { "data-testid": "layer", blurBase: 4 })
-    expect(getByTestId("layer")).toHaveStyle({ willChange: "transform, filter" })
+    const { container } = renderParallax({}, { blurBase: 4 })
+    expect(getLayer(container)).toHaveStyle({ willChange: "transform, filter" })
   })
 
   it("resets transform and clears filter when disabled", () => {
-    const { getByTestId } = render(
+    const { container } = render(
       <Parallax disabled>
-        <ParallaxLayer data-testid="layer" blur={4} />
+        <ParallaxLayer blur={4} />
       </Parallax>,
     )
     act(() => flushRaf())
-    const el = getByTestId("layer")
+    const el = getLayer(container)
     expect(el.style.transform).toBe("translate3d(0,0,0)")
     expect(el.style.opacity).toBe("1")
     expect(el.style.filter).toBe("")
   })
 
   it("renders as a custom element when as prop is set", () => {
-    render(
+    const { container } = render(
       <Parallax>
-        <ParallaxLayer as="span" data-testid="layer" />
+        <ParallaxLayer as="span" />
       </Parallax>,
     )
-    expect(screen.getByTestId("layer").tagName).toBe("SPAN")
+    expect(getLayer(container)?.tagName).toBe("SPAN")
   })
 })
 
@@ -116,13 +123,13 @@ describe("prefers-reduced-motion", () => {
       dispatchEvent: vi.fn(),
     }))
 
-    const { getByTestId } = render(
+    const { container } = render(
       <Parallax>
-        <ParallaxLayer data-testid="layer" />
+        <ParallaxLayer />
       </Parallax>,
     )
     act(() => flushRaf())
-    expect(getByTestId("layer").style.transform).toBe("translate3d(0,0,0)")
+    expect(getLayer(container).style.transform).toBe("translate3d(0,0,0)")
   })
 
   beforeEach(() => {
