@@ -1,5 +1,7 @@
 # @iampoul/react-parallax
 
+**[react-parallax.dev](https://react-parallax.dev)** · [npm](https://www.npmjs.com/package/@iampoul/react-parallax) · [GitHub](https://github.com/iampoul/react-parallax)
+
 A performant, accessible React parallax component with scroll and pointer-based motion.
 
 ## Installation
