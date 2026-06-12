@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-06-12
+
+### Added
+
+- `direction` prop on `<Parallax>` (`"vertical"` | `"horizontal"`, default `"vertical"`). When set to `"horizontal"`, scroll progress is measured left-to-right across the viewport instead of top-to-bottom — enabling first-class support for side-scrolling layouts, horizontal timelines, and carousel sections.
+- `direction` is now part of `ParallaxContextValue` so `<ParallaxLayer>` and custom hooks can read it via `useParallax()`.
+- `scrollRange="%"` on `<ParallaxLayer>` now resolves against the container **width** when `direction="horizontal"` (previously always resolved against height).
+
 ## [0.6.0] - 2026-06-11
 
 ### Fixed

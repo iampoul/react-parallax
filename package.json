@@ -1,6 +1,6 @@
 {
   "name": "@iampoul/react-parallax",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "A performant, accessible React parallax component with scroll and pointer-based motion",
   "homepage": "https://react-parallax.dev",
   "keywords": [

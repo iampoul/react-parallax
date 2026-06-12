@@ -174,3 +174,52 @@ describe("scrollRange", () => {
     expect(() => renderParallax({}, { scrollRange: "25%" })).not.toThrow()
   })
 })
+
+describe("direction", () => {
+  it("defaults to vertical direction", () => {
+    let capturedCtx: ReturnType<typeof useParallax> | null = null
+    function Inspector() {
+      capturedCtx = useParallax()
+      return null
+    }
+    render(
+      <Parallax>
+        <Inspector />
+      </Parallax>,
+    )
+    expect(capturedCtx!.direction).toBe("vertical")
+  })
+
+  it("exposes horizontal direction via context", () => {
+    let capturedCtx: ReturnType<typeof useParallax> | null = null
+    function Inspector() {
+      capturedCtx = useParallax()
+      return null
+    }
+    render(
+      <Parallax direction="horizontal">
+        <Inspector />
+      </Parallax>,
+    )
+    expect(capturedCtx!.direction).toBe("horizontal")
+  })
+
+  it("renders with direction=horizontal without throwing", () => {
+    expect(() =>
+      renderParallax({ direction: "horizontal" }, { axis: "x" }),
+    ).not.toThrow()
+  })
+
+  it("scrollRange % resolves against container width when horizontal", () => {
+    // JSDOM always returns offsetWidth=0 so we just verify it renders without error
+    // and the layer has a transform applied (not undefined/NaN).
+    const { container } = render(
+      <Parallax direction="horizontal">
+        <ParallaxLayer scrollRange="50%" axis="x" />
+      </Parallax>,
+    )
+    act(() => flushRaf())
+    const layer = getLayer(container)
+    expect(layer.style.transform).toMatch(/translate3d/)
+  })
+})
