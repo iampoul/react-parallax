@@ -29,6 +29,12 @@ export interface ParallaxContextValue {
   disabled: boolean
   /** Whether scroll-based and/or pointer-based motion is enabled. */
   mode: "scroll" | "pointer" | "both"
+  /**
+   * Which scroll axis drives `scrollProgress`.
+   * `"vertical"` (default) measures the container's position top-to-bottom in the viewport.
+   * `"horizontal"` measures left-to-right — use for side-scrolling layouts.
+   */
+  direction: "vertical" | "horizontal"
   /** Register a layer to receive motion-state updates. Returns an unsubscribe fn. */
   subscribe: (cb: Subscriber) => () => void
   /** Read the most recent motion state synchronously (used for first paint). */

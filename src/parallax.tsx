@@ -72,6 +72,23 @@ export interface ParallaxProps {
    * <Parallax onProgress={({ scrollProgress }) => setOpacity(scrollProgress)} />
    */
   onProgress?: (state: ParallaxState) => void
+  /**
+   * Which scroll axis drives the parallax effect.
+   * - `"vertical"`: scroll progress is measured top-to-bottom (default, standard page scroll).
+   * - `"horizontal"`: scroll progress is measured left-to-right — use for side-scrolling layouts.
+   *
+   * When set to `"horizontal"`, also set `axis="x"` on your `<ParallaxLayer>` children
+   * so layers translate along the same axis as the scroll direction.
+   *
+   * @example
+   * // Side-scrolling section
+   * <div style={{ overflowX: "scroll" }}>
+   *   <Parallax direction="horizontal" scrollParent={wrapperRef.current}>
+   *     <ParallaxLayer speed={0.4} axis="x">…</ParallaxLayer>
+   *   </Parallax>
+   * </div>
+   */
+  direction?: "vertical" | "horizontal"
   /** The HTML element/tag to render as the container. Default `"div"`. */
   as?: ElementType
   className?: string
@@ -89,6 +106,7 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
   {
     children,
     mode = "both",
+    direction = "vertical",
     intensity = 1,
     smoothing = 0.12,
     disabled = false,
@@ -144,16 +162,23 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
     [forwardedRef],
   )
 
-  // Read scroll progress relative to the viewport.
+  // Read scroll progress relative to the viewport — vertical or horizontal depending on direction.
   const measureScroll = useCallback(() => {
     const el = containerRef.current
     if (!el) return
     const rect = el.getBoundingClientRect()
-    const vh = window.innerHeight || document.documentElement.clientHeight
-    // Progress from 0 (entering at bottom) to 1 (leaving at top).
-    const raw = (vh - rect.top) / (vh + rect.height)
-    target.current.scrollProgress = Math.min(1, Math.max(0, raw))
-  }, [])
+    if (direction === "horizontal") {
+      // Progress from 0 (entering at right edge) to 1 (leaving at left edge).
+      const vw = window.innerWidth || document.documentElement.clientWidth
+      const raw = (vw - rect.left) / (vw + rect.width)
+      target.current.scrollProgress = Math.min(1, Math.max(0, raw))
+    } else {
+      // Progress from 0 (entering at bottom) to 1 (leaving at top).
+      const vh = window.innerHeight || document.documentElement.clientHeight
+      const raw = (vh - rect.top) / (vh + rect.height)
+      target.current.scrollProgress = Math.min(1, Math.max(0, raw))
+    }
+  }, [direction])
 
   const onPointer = useCallback((clientX: number, clientY: number) => {
     const el = containerRef.current
@@ -280,6 +305,7 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
       intensity,
       disabled: disabled || prefersReduced,
       mode,
+      direction,
       containerRef,
       getState: () => state.current,
       subscribe: (cb) => {
@@ -288,7 +314,7 @@ export const Parallax = forwardRef<HTMLElement, ParallaxProps>(function Parallax
         return () => subscribers.current.delete(cb)
       },
     }),
-    [intensity, disabled, mode, prefersReduced],
+    [intensity, disabled, mode, direction, prefersReduced],
   )
 
   const containerStyle: CSSProperties = {

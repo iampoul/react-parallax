@@ -32,6 +32,31 @@ function App() {
 }
 ```
 
+### Horizontal parallax
+
+For side-scrolling layouts, pass `direction="horizontal"` to drive scroll progress from the horizontal axis. Set `axis="x"` on layers so they translate along the same direction as the scroll.
+
+```tsx
+const wrapperRef = useRef<HTMLDivElement>(null)
+
+<div ref={wrapperRef} style={{ overflowX: "scroll", display: "flex" }}>
+  <Parallax
+    direction="horizontal"
+    mode="scroll"
+    scrollParent={wrapperRef.current}
+    overflow="visible"
+    style={{ width: "300vw", height: "100vh" }}
+  >
+    <ParallaxLayer speed={0.4} axis="x">
+      <img src="/clouds.png" alt="" />
+    </ParallaxLayer>
+    <ParallaxLayer speed={0.8} axis="x" zIndex={1}>
+      <img src="/mountains.png" alt="" />
+    </ParallaxLayer>
+  </Parallax>
+</div>
+```
+
 ## API
 
 ### `<Parallax>`
@@ -41,6 +66,7 @@ The container that tracks scroll + pointer motion and broadcasts it to child lay
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
 | `mode` | `"scroll" \| "pointer" \| "both"` | `"both"` | Which inputs drive the parallax effect |
+| `direction` | `"vertical" \| "horizontal"` | `"vertical"` | Scroll axis that drives progress. Use `"horizontal"` for side-scrolling layouts — pairs with `axis="x"` on layers |
 | `intensity` | `number` | `1` | Global movement multiplier (0.5 = subtle, 2 = dramatic) |
 | `smoothing` | `number` | `0.12` | Easing factor (lower = floatier, 1 = instant). Ignored when `springConfig` is set |
 | `springConfig` | `{ stiffness?: number; damping?: number }` | – | Spring physics alternative to lerp — gives natural overshoot. `stiffness` default `120`, `damping` default `14` |
